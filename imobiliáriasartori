@@ -1,51 +1,269 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Imobiliária Sartori</title>
-  <link rel="stylesheet" href="style.css"> <!-- Adicione seu CSS aqui -->
-  <style>
-    body { font-family: Arial, sans-serif; margin: 0; padding: 0; background: #f8f8f8; color: #333; }
-    header { background: #6b1e7b; color: white; padding: 20px; text-align: center; }
-    main { padding: 20px; max-width: 800px; margin: auto; }
-    footer { background: #333; color: white; padding: 10px; text-align: center; }
-    a { color: #6b1e7b; text-decoration: none; }
-    a:hover { text-decoration: underline; }
-  </style>
-</head>
-<body>
-  <header>
-    <h1>Imobiliária Sartori</h1>
-    <p>Transformando sonhos em imóveis</p>
-  </header>
+import React, { useState, useMemo, useCallback } from "react";
 
-  <main>
-    <section>
-      <h2>Sobre Nós</h2>
-      <p>Somos uma imobiliária dedicada a oferecer os melhores imóveis com atendimento personalizado e confiança.</p>
-    </section>
+/**
+ * ImobiliáriaApp - componente principal (refatorado)
+ * Uso: cole em src/App.jsx de um projeto React com Tailwind
+ */
 
-    <section>
-      <h2>Imóveis</h2>
-      <ul>
-        <li><a href="#">Apartamento no Centro</a></li>
-        <li><a href="#">Casa em Garibaldi</a></li>
-        <li><a href="#">Terreno no Bairro Vista Alegre</a></li>
-      </ul>
-    </section>
+/* ---------- util: local ID generator (usa crypto se disponível) ---------- */
+function genId() {
+  try {
+    if (typeof crypto !== "undefined" && crypto.randomUUID) return crypto.randomUUID();
+  } catch (e) {}
+  return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+}
 
-    <section>
-      <h2>Contato</h2>
-      <p>Email: contato@imobiliariasartori.com.br</p>
-      <p>Telefone: (54) 99999-9999</p>
-    </section>
-  </main>
+/* ---------- useLocalStorage hook simples e seguro ---------- */
+function useLocalStorage(key, initialValue) {
+  const [state, setState] = useState(() => {
+    try {
+      const raw = localStorage.getItem(key);
+      return raw ? JSON.parse(raw) : typeof initialValue === "function" ? initialValue() : initialValue;
+    } catch (e) {
+      console.warn("useLocalStorage read failed:", e);
+      return typeof initialValue === "function" ? initialValue() : initialValue;
+    }
+  });
 
-  <footer>
-    <p>&copy; 2025 Imobiliária Sartori. Todos os direitos reservados.</p>
-  </footer>
+  const setLocal = useCallback(
+    (value) => {
+      try {
+        const next = typeof value === "function" ? value(state) : value;
+        setState(next);
+        localStorage.setItem(key, JSON.stringify(next));
+      } catch (e) {
+        console.warn("useLocalStorage write failed:", e);
+      }
+    },
+    [key, state]
+  );
 
-  <script src="script.js"></script> <!-- Adicione seu JS aqui -->
-</body>
-</html>
+  return [state, setLocal];
+}
+
+/* ---------- dados de exemplo (rodar se não houver localStorage) ---------- */
+function sampleListings() {
+  return [
+    {
+      id: genId(),
+      title: "Apartamento ensolarado perto do parque",
+      description: "2 quartos, 1 banheiro, cozinha americana. Boa ventilação.",
+      city: "São Paulo",
+      price: 420000,
+      image: "",
+    },
+    {
+      id: genId(),
+      title: "Casa de esquina com quintal",
+      description: "3 quartos, amplo quintal e garagem para 2 carros.",
+      city: "Campinas",
+      price: 650000,
+      image: "",
+    },
+    {
+      id: genId(),
+      title: "Studio moderno no centro",
+      description: "Pronto para morar, perto de transporte e comércio.",
+      city: "São Paulo",
+      price: 280000,
+      image: "",
+    },
+  ];
+}
+
+/* ---------- ListingForm: usado para adicionar/editar ---------- */
+function ListingForm({ initial = {}, onCancel, onSubmit }) {
+  const [form, setForm] = useState({
+    title: initial.title || "",
+    description: initial.description || "",
+    city: initial.city || "",
+    price: initial.price || "",
+    image: initial.image || "",
+  });
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setForm((s) => ({ ...s, [name]: value }));
+  };
+
+  const submit = (e) => {
+    e.preventDefault();
+    // validação simples
+    if (!form.title.trim() || !form.city.trim()) {
+      alert("Título e cidade são obrigatórios.");
+      return;
+    }
+    onSubmit({ ...form, price: Number(form.price || 0) });
+  };
+
+  return (
+    <form onSubmit={submit} className="space-y-3 p-4 bg-white rounded-md shadow-sm">
+      <div>
+        <label className="block text-sm font-medium">Título</label>
+        <input name="title" value={form.title} onChange={handleChange} className="mt-1 block w-full border rounded px-2 py-1" />
+      </div>
+      <div>
+        <label className="block text-sm font-medium">Cidade</label>
+        <input name="city" value={form.city} onChange={handleChange} className="mt-1 block w-full border rounded px-2 py-1" />
+      </div>
+      <div>
+        <label className="block text-sm font-medium">Preço</label>
+        <input name="price" type="number" value={form.price} onChange={handleChange} className="mt-1 block w-full border rounded px-2 py-1" />
+      </div>
+      <div>
+        <label className="block text-sm font-medium">Descrição</label>
+        <textarea name="description" value={form.description} onChange={handleChange} className="mt-1 block w-full border rounded px-2 py-1" rows={3} />
+      </div>
+      <div className="flex gap-2">
+        <button type="submit" className="px-3 py-1 bg-green-700 text-white rounded">Salvar</button>
+        <button type="button" onClick={onCancel} className="px-3 py-1 border rounded">Cancelar</button>
+      </div>
+    </form>
+  );
+}
+
+/* ---------- ListingCard: apresentação do imóvel ---------- */
+function ListingCard({ item, onEdit, onRemove }) {
+  return (
+    <div className="border rounded p-3 bg-white shadow-sm flex flex-col">
+      <div className="flex justify-between items-start">
+        <h3 className="font-bold">{item.title}</h3>
+        <div className="text-sm text-gray-600">R$ {Number(item.price).toLocaleString()}</div>
+      </div>
+      <div className="text-sm text-gray-700 mt-1">{item.city}</div>
+      <p className="text-sm mt-2 text-gray-600 flex-1">{item.description}</p>
+      <div className="mt-3 flex gap-2">
+        <button onClick={() => onEdit(item.id)} className="px-2 py-1 bg-yellow-500 text-white rounded text-sm">Editar</button>
+        <button onClick={() => onRemove(item.id)} className="px-2 py-1 bg-red-600 text-white rounded text-sm">Remover</button>
+      </div>
+    </div>
+  );
+}
+
+/* ---------- App principal ---------- */
+export default function ImobiliariaApp() {
+  const brand = {
+    dark: "bg-[#29482f]",
+    mid: "bg-[#3b6b4a]",
+    light: "bg-[#dbe9df]",
+    accent: "#556b4f",
+    text: "text-[#0f1a14]",
+  };
+
+  const [listings, setListings] = useLocalStorage("imobiliaria_listings_v1", sampleListings);
+  const [activeTab, setActiveTab] = useState("listings"); // listings | add | about
+  const [cityFilter, setCityFilter] = useState("Todas");
+  const [search, setSearch] = useState("");
+  const [editing, setEditing] = useState(null);
+
+  // cidades disponíveis (memoizado)
+  const cities = useMemo(() => ["Todas", ...Array.from(new Set(listings.map((l) => l.city)))], [listings]);
+
+  // filtragem memoizada
+  const visible = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    return listings.filter((l) => {
+      if (cityFilter !== "Todas" && l.city !== cityFilter) return false;
+      if (q && !(`${l.title} ${l.description} ${l.city}`.toLowerCase().includes(q))) return false;
+      return true;
+    });
+  }, [listings, cityFilter, search]);
+
+  const addOrUpdateListing = useCallback(
+    (data) => {
+      if (editing) {
+        setListings((cur) => cur.map((l) => (l.id === editing.id ? { ...l, ...data } : l)));
+        setEditing(null);
+        setActiveTab("listings");
+        return;
+      }
+      const newItem = { id: genId(), ...data };
+      setListings((cur) => [newItem, ...cur]);
+      setActiveTab("listings");
+    },
+    [editing, setListings]
+  );
+
+  const removeListing = useCallback(
+    (id) => {
+      // substitua por modal se preferir
+      if (!window.confirm("Remover este imóvel?")) return;
+      setListings((cur) => cur.filter((l) => l.id !== id));
+    },
+    [setListings]
+  );
+
+  const startEdit = useCallback(
+    (id) => {
+      const item = listings.find((l) => l.id === id);
+      if (item) {
+        setEditing(item);
+        setActiveTab("add");
+      }
+    },
+    [listings]
+  );
+
+  const cancelEdit = useCallback(() => {
+    setEditing(null);
+    setActiveTab("listings");
+  }, []);
+
+  return (
+    <div className={`min-h-screen ${brand.light} ${brand.text} flex flex-col`}>
+      <header className={`${brand.mid} text-white p-4 shadow-md`}>
+        <div className="container mx-auto flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className={`w-12 h-12 rounded-md ${brand.dark} flex items-center justify-center font-bold`}>IM</div>
+            <div>
+              <div className="font-bold">Imobiliária</div>
+              <div className="text-sm">Catálogo simples</div>
+            </div>
+          </div>
+          <nav className="flex gap-2">
+            <button onClick={() => setActiveTab("listings")} className="px-3 py-1 rounded bg-white/10">Imóveis</button>
+            <button onClick={() => { setEditing(null); setActiveTab("add"); }} className="px-3 py-1 rounded bg-white/10">Adicionar</button>
+            <button onClick={() => setActiveTab("about")} className="px-3 py-1 rounded bg-white/10">Sobre</button>
+          </nav>
+        </div>
+      </header>
+
+      <main className="container mx-auto p-4 flex-1">
+        {activeTab === "listings" && (
+          <>
+            <div className="flex gap-3 mb-4">
+              <select value={cityFilter} onChange={(e) => setCityFilter(e.target.value)} className="border rounded px-2 py-1">
+                {cities.map((c) => <option key={c} value={c}>{c}</option>)}
+              </select>
+              <input placeholder="Buscar..." value={search} onChange={(e) => setSearch(e.target.value)} className="border rounded px-2 py-1 flex-1" />
+            </div>
+
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {visible.length === 0 ? (
+                <div className="p-4 bg-white rounded">Nenhum imóvel encontrado.</div>
+              ) : visible.map((item) => (
+                <ListingCard key={item.id} item={item} onEdit={startEdit} onRemove={removeListing} />
+              ))}
+            </div>
+          </>
+        )}
+
+        {activeTab === "add" && (
+          <div className="max-w-2xl">
+            <h2 className="text-lg font-semibold mb-3">{editing ? "Editar imóvel" : "Adicionar imóvel"}</h2>
+            <ListingForm initial={editing || {}} onCancel={cancelEdit} onSubmit={addOrUpdateListing} />
+          </div>
+        )}
+
+        {activeTab === "about" && (
+          <div className="bg-white p-4 rounded-md shadow-sm">
+            <h2 className="font-semibold">Sobre</h2>
+            <p className="mt-2 text-sm text-gray-700">Demo simples de catálogo de imóveis. Armazenamento local via localStorage.</p>
+          </div>
+        )}
+      </main>
+
+      <footer className="p-4 text-center text-sm text-gray-700">© Imobiliária - Exemplo</footer>
+    </div>
+  );
+}
