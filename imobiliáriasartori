@@ -1,269 +1,222 @@
-import React, { useState, useMemo, useCallback } from "react";
-
-/**
- * ImobiliáriaApp - componente principal (refatorado)
- * Uso: cole em src/App.jsx de um projeto React com Tailwind
- */
-
-/* ---------- util: local ID generator (usa crypto se disponível) ---------- */
-function genId() {
-  try {
-    if (typeof crypto !== "undefined" && crypto.randomUUID) return crypto.randomUUID();
-  } catch (e) {}
-  return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
-}
-
-/* ---------- useLocalStorage hook simples e seguro ---------- */
-function useLocalStorage(key, initialValue) {
-  const [state, setState] = useState(() => {
-    try {
-      const raw = localStorage.getItem(key);
-      return raw ? JSON.parse(raw) : typeof initialValue === "function" ? initialValue() : initialValue;
-    } catch (e) {
-      console.warn("useLocalStorage read failed:", e);
-      return typeof initialValue === "function" ? initialValue() : initialValue;
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Imobiliária</title>
+  <script>
+    // ---------- util: gerador de ID ----------
+    function genId() {
+      return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
     }
-  });
 
-  const setLocal = useCallback(
-    (value) => {
-      try {
-        const next = typeof value === "function" ? value(state) : value;
-        setState(next);
-        localStorage.setItem(key, JSON.stringify(next));
-      } catch (e) {
-        console.warn("useLocalStorage write failed:", e);
-      }
-    },
-    [key, state]
-  );
-
-  return [state, setLocal];
-}
-
-/* ---------- dados de exemplo (rodar se não houver localStorage) ---------- */
-function sampleListings() {
-  return [
-    {
-      id: genId(),
-      title: "Apartamento ensolarado perto do parque",
-      description: "2 quartos, 1 banheiro, cozinha americana. Boa ventilação.",
-      city: "São Paulo",
-      price: 420000,
-      image: "",
-    },
-    {
-      id: genId(),
-      title: "Casa de esquina com quintal",
-      description: "3 quartos, amplo quintal e garagem para 2 carros.",
-      city: "Campinas",
-      price: 650000,
-      image: "",
-    },
-    {
-      id: genId(),
-      title: "Studio moderno no centro",
-      description: "Pronto para morar, perto de transporte e comércio.",
-      city: "São Paulo",
-      price: 280000,
-      image: "",
-    },
-  ];
-}
-
-/* ---------- ListingForm: usado para adicionar/editar ---------- */
-function ListingForm({ initial = {}, onCancel, onSubmit }) {
-  const [form, setForm] = useState({
-    title: initial.title || "",
-    description: initial.description || "",
-    city: initial.city || "",
-    price: initial.price || "",
-    image: initial.image || "",
-  });
-
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setForm((s) => ({ ...s, [name]: value }));
-  };
-
-  const submit = (e) => {
-    e.preventDefault();
-    // validação simples
-    if (!form.title.trim() || !form.city.trim()) {
-      alert("Título e cidade são obrigatórios.");
-      return;
+    // ---------- localStorage simples ----------
+    function getListings() {
+      const raw = localStorage.getItem("imobiliaria_listings_v1");
+      if (raw) return JSON.parse(raw);
+      const sample = [
+        { id: genId(), title: "Apartamento ensolarado perto do parque", description: "2 quartos, 1 banheiro, cozinha americana. Boa ventilação.", city: "São Paulo", price: 420000 },
+        { id: genId(), title: "Casa de esquina com quintal", description: "3 quartos, amplo quintal e garagem para 2 carros.", city: "Campinas", price: 650000 },
+        { id: genId(), title: "Studio moderno no centro", description: "Pronto para morar, perto de transporte e comércio.", city: "São Paulo", price: 280000 },
+      ];
+      localStorage.setItem("imobiliaria_listings_v1", JSON.stringify(sample));
+      return sample;
     }
-    onSubmit({ ...form, price: Number(form.price || 0) });
-  };
 
-  return (
-    <form onSubmit={submit} className="space-y-3 p-4 bg-white rounded-md shadow-sm">
+    function saveListings(listings) {
+      localStorage.setItem("imobiliaria_listings_v1", JSON.stringify(listings));
+    }
+  </script>
+  <style>
+    body { font-family: sans-serif; margin: 0; background: #dbe9df; color: #0f1a14; }
+    header { background: #3b6b4a; color: white; padding: 1rem; display: flex; justify-content: space-between; align-items: center; }
+    header .brand { display: flex; align-items: center; gap: 0.5rem; }
+    header nav button { margin-left: 0.5rem; padding: 0.3rem 0.7rem; border-radius: 0.3rem; background: rgba(255,255,255,0.1); border: none; color: white; cursor: pointer; }
+    main { padding: 1rem; max-width: 1200px; margin: auto; }
+    footer { text-align: center; padding: 1rem; color: #555; }
+    .listing-card { border: 1px solid #ccc; background: white; padding: 1rem; border-radius: 0.5rem; margin-bottom: 1rem; display: flex; flex-direction: column; }
+    .listing-card h3 { margin: 0; font-weight: bold; }
+    .listing-card .price { color: gray; font-size: 0.9rem; }
+    .listing-card .city { font-size: 0.85rem; margin-top: 0.3rem; }
+    .listing-card p { font-size: 0.85rem; margin-top: 0.5rem; flex: 1; }
+    .listing-card button { padding: 0.3rem 0.6rem; border: none; border-radius: 0.3rem; color: white; cursor: pointer; margin-right: 0.3rem; font-size: 0.8rem; }
+    .edit-btn { background: #f59e0b; }
+    .remove-btn { background: #dc2626; }
+    .form-group { margin-bottom: 0.7rem; }
+    input, textarea, select { width: 100%; padding: 0.3rem; border-radius: 0.3rem; border: 1px solid #ccc; }
+    .form-buttons button { margin-right: 0.5rem; }
+    .add-btn { background: #16a34a; color: white; border: none; padding: 0.4rem 0.8rem; border-radius: 0.3rem; cursor: pointer; }
+    .cancel-btn { background: white; border: 1px solid #ccc; padding: 0.4rem 0.8rem; border-radius: 0.3rem; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand">
+      <div style="width:48px;height:48px;background:#29482f;display:flex;align-items:center;justify-content:center;font-weight:bold;">IM</div>
       <div>
-        <label className="block text-sm font-medium">Título</label>
-        <input name="title" value={form.title} onChange={handleChange} className="mt-1 block w-full border rounded px-2 py-1" />
-      </div>
-      <div>
-        <label className="block text-sm font-medium">Cidade</label>
-        <input name="city" value={form.city} onChange={handleChange} className="mt-1 block w-full border rounded px-2 py-1" />
-      </div>
-      <div>
-        <label className="block text-sm font-medium">Preço</label>
-        <input name="price" type="number" value={form.price} onChange={handleChange} className="mt-1 block w-full border rounded px-2 py-1" />
-      </div>
-      <div>
-        <label className="block text-sm font-medium">Descrição</label>
-        <textarea name="description" value={form.description} onChange={handleChange} className="mt-1 block w-full border rounded px-2 py-1" rows={3} />
-      </div>
-      <div className="flex gap-2">
-        <button type="submit" className="px-3 py-1 bg-green-700 text-white rounded">Salvar</button>
-        <button type="button" onClick={onCancel} className="px-3 py-1 border rounded">Cancelar</button>
-      </div>
-    </form>
-  );
-}
-
-/* ---------- ListingCard: apresentação do imóvel ---------- */
-function ListingCard({ item, onEdit, onRemove }) {
-  return (
-    <div className="border rounded p-3 bg-white shadow-sm flex flex-col">
-      <div className="flex justify-between items-start">
-        <h3 className="font-bold">{item.title}</h3>
-        <div className="text-sm text-gray-600">R$ {Number(item.price).toLocaleString()}</div>
-      </div>
-      <div className="text-sm text-gray-700 mt-1">{item.city}</div>
-      <p className="text-sm mt-2 text-gray-600 flex-1">{item.description}</p>
-      <div className="mt-3 flex gap-2">
-        <button onClick={() => onEdit(item.id)} className="px-2 py-1 bg-yellow-500 text-white rounded text-sm">Editar</button>
-        <button onClick={() => onRemove(item.id)} className="px-2 py-1 bg-red-600 text-white rounded text-sm">Remover</button>
+        <div>Imobiliária</div>
+        <div style="font-size:0.8rem;">Catálogo simples</div>
       </div>
     </div>
-  );
-}
+    <nav>
+      <button onclick="showTab('listings')">Imóveis</button>
+      <button onclick="showTab('add')">Adicionar</button>
+      <button onclick="showTab('about')">Sobre</button>
+    </nav>
+  </header>
 
-/* ---------- App principal ---------- */
-export default function ImobiliariaApp() {
-  const brand = {
-    dark: "bg-[#29482f]",
-    mid: "bg-[#3b6b4a]",
-    light: "bg-[#dbe9df]",
-    accent: "#556b4f",
-    text: "text-[#0f1a14]",
-  };
+  <main>
+    <div id="listings-tab">
+      <div style="display:flex; gap:0.5rem; margin-bottom:1rem;">
+        <select id="cityFilter" onchange="renderListings()"></select>
+        <input type="text" id="search" placeholder="Buscar..." oninput="renderListings()" style="flex:1">
+      </div>
+      <div id="listings-container"></div>
+    </div>
 
-  const [listings, setListings] = useLocalStorage("imobiliaria_listings_v1", sampleListings);
-  const [activeTab, setActiveTab] = useState("listings"); // listings | add | about
-  const [cityFilter, setCityFilter] = useState("Todas");
-  const [search, setSearch] = useState("");
-  const [editing, setEditing] = useState(null);
-
-  // cidades disponíveis (memoizado)
-  const cities = useMemo(() => ["Todas", ...Array.from(new Set(listings.map((l) => l.city)))], [listings]);
-
-  // filtragem memoizada
-  const visible = useMemo(() => {
-    const q = search.trim().toLowerCase();
-    return listings.filter((l) => {
-      if (cityFilter !== "Todas" && l.city !== cityFilter) return false;
-      if (q && !(`${l.title} ${l.description} ${l.city}`.toLowerCase().includes(q))) return false;
-      return true;
-    });
-  }, [listings, cityFilter, search]);
-
-  const addOrUpdateListing = useCallback(
-    (data) => {
-      if (editing) {
-        setListings((cur) => cur.map((l) => (l.id === editing.id ? { ...l, ...data } : l)));
-        setEditing(null);
-        setActiveTab("listings");
-        return;
-      }
-      const newItem = { id: genId(), ...data };
-      setListings((cur) => [newItem, ...cur]);
-      setActiveTab("listings");
-    },
-    [editing, setListings]
-  );
-
-  const removeListing = useCallback(
-    (id) => {
-      // substitua por modal se preferir
-      if (!window.confirm("Remover este imóvel?")) return;
-      setListings((cur) => cur.filter((l) => l.id !== id));
-    },
-    [setListings]
-  );
-
-  const startEdit = useCallback(
-    (id) => {
-      const item = listings.find((l) => l.id === id);
-      if (item) {
-        setEditing(item);
-        setActiveTab("add");
-      }
-    },
-    [listings]
-  );
-
-  const cancelEdit = useCallback(() => {
-    setEditing(null);
-    setActiveTab("listings");
-  }, []);
-
-  return (
-    <div className={`min-h-screen ${brand.light} ${brand.text} flex flex-col`}>
-      <header className={`${brand.mid} text-white p-4 shadow-md`}>
-        <div className="container mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className={`w-12 h-12 rounded-md ${brand.dark} flex items-center justify-center font-bold`}>IM</div>
-            <div>
-              <div className="font-bold">Imobiliária</div>
-              <div className="text-sm">Catálogo simples</div>
-            </div>
-          </div>
-          <nav className="flex gap-2">
-            <button onClick={() => setActiveTab("listings")} className="px-3 py-1 rounded bg-white/10">Imóveis</button>
-            <button onClick={() => { setEditing(null); setActiveTab("add"); }} className="px-3 py-1 rounded bg-white/10">Adicionar</button>
-            <button onClick={() => setActiveTab("about")} className="px-3 py-1 rounded bg-white/10">Sobre</button>
-          </nav>
+    <div id="add-tab" style="display:none; max-width:600px;">
+      <h2 id="form-title">Adicionar imóvel</h2>
+      <form id="listing-form">
+        <div class="form-group">
+          <label>Título</label>
+          <input name="title" required>
         </div>
-      </header>
-
-      <main className="container mx-auto p-4 flex-1">
-        {activeTab === "listings" && (
-          <>
-            <div className="flex gap-3 mb-4">
-              <select value={cityFilter} onChange={(e) => setCityFilter(e.target.value)} className="border rounded px-2 py-1">
-                {cities.map((c) => <option key={c} value={c}>{c}</option>)}
-              </select>
-              <input placeholder="Buscar..." value={search} onChange={(e) => setSearch(e.target.value)} className="border rounded px-2 py-1 flex-1" />
-            </div>
-
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {visible.length === 0 ? (
-                <div className="p-4 bg-white rounded">Nenhum imóvel encontrado.</div>
-              ) : visible.map((item) => (
-                <ListingCard key={item.id} item={item} onEdit={startEdit} onRemove={removeListing} />
-              ))}
-            </div>
-          </>
-        )}
-
-        {activeTab === "add" && (
-          <div className="max-w-2xl">
-            <h2 className="text-lg font-semibold mb-3">{editing ? "Editar imóvel" : "Adicionar imóvel"}</h2>
-            <ListingForm initial={editing || {}} onCancel={cancelEdit} onSubmit={addOrUpdateListing} />
-          </div>
-        )}
-
-        {activeTab === "about" && (
-          <div className="bg-white p-4 rounded-md shadow-sm">
-            <h2 className="font-semibold">Sobre</h2>
-            <p className="mt-2 text-sm text-gray-700">Demo simples de catálogo de imóveis. Armazenamento local via localStorage.</p>
-          </div>
-        )}
-      </main>
-
-      <footer className="p-4 text-center text-sm text-gray-700">© Imobiliária - Exemplo</footer>
+        <div class="form-group">
+          <label>Cidade</label>
+          <input name="city" required>
+        </div>
+        <div class="form-group">
+          <label>Preço</label>
+          <input name="price" type="number">
+        </div>
+        <div class="form-group">
+          <label>Descrição</label>
+          <textarea name="description" rows="3"></textarea>
+        </div>
+        <div class="form-buttons">
+          <button type="submit" class="add-btn">Salvar</button>
+          <button type="button" class="cancel-btn" onclick="cancelEdit()">Cancelar</button>
+        </div>
+      </form>
     </div>
-  );
-}
+
+    <div id="about-tab" style="display:none;">
+      <div style="background:white; padding:1rem; border-radius:0.5rem;">
+        <h2>Sobre</h2>
+        <p style="margin-top:0.5rem; font-size:0.9rem;">Demo simples de catálogo de imóveis. Armazenamento local via localStorage.</p>
+      </div>
+    </div>
+  </main>
+
+  <footer>© Imobiliária - Exemplo</footer>
+
+  <script>
+    let listings = getListings();
+    let editing = null;
+
+    function showTab(tab) {
+      document.getElementById('listings-tab').style.display = tab==='listings'?'block':'none';
+      document.getElementById('add-tab').style.display = tab==='add'?'block':'none';
+      document.getElementById('about-tab').style.display = tab==='about'?'block':'none';
+      if(tab==='add') fillForm(editing);
+    }
+
+    function fillForm(item){
+      const form = document.getElementById('listing-form');
+      form.title.value = item?.title||'';
+      form.city.value = item?.city||'';
+      form.price.value = item?.price||'';
+      form.description.value = item?.description||'';
+      document.getElementById('form-title').innerText = item?'Editar imóvel':'Adicionar imóvel';
+    }
+
+    function cancelEdit(){
+      editing = null;
+      fillForm({});
+      showTab('listings');
+    }
+
+    function renderListings() {
+      const container = document.getElementById('listings-container');
+      container.innerHTML = '';
+      const cityFilter = document.getElementById('cityFilter').value;
+      const search = document.getElementById('search').value.toLowerCase();
+
+      const filtered = listings.filter(l=>{
+        if(cityFilter !== 'Todas' && l.city !== cityFilter) return false;
+        if(search && !(`${l.title} ${l.description} ${l.city}`.toLowerCase().includes(search))) return false;
+        return true;
+      });
+
+      if(filtered.length===0){
+        container.innerHTML='<div style="padding:1rem; background:white; border-radius:0.3rem;">Nenhum imóvel encontrado.</div>';
+      }
+
+      filtered.forEach(item=>{
+        const div = document.createElement('div');
+        div.className='listing-card';
+        div.innerHTML = `
+          <div style="display:flex; justify-content:space-between; align-items:start;">
+            <h3>${item.title}</h3>
+            <div class="price">R$ ${item.price.toLocaleString()}</div>
+          </div>
+          <div class="city">${item.city}</div>
+          <p>${item.description}</p>
+          <div style="margin-top:0.5rem;">
+            <button class="edit-btn" onclick="startEdit('${item.id}')">Editar</button>
+            <button class="remove-btn" onclick="removeListing('${item.id}')">Remover</button>
+          </div>
+        `;
+        container.appendChild(div);
+      });
+
+      // atualizar select de cidades
+      const cities = ['Todas', ...Array.from(new Set(listings.map(l=>l.city)))];
+      const select = document.getElementById('cityFilter');
+      select.innerHTML='';
+      cities.forEach(c=>{
+        const option = document.createElement('option');
+        option.value=c;
+        option.text=c;
+        if(c===cityFilter) option.selected=true;
+        select.appendChild(option);
+      });
+    }
+
+    document.getElementById('listing-form').onsubmit = function(e){
+      e.preventDefault();
+      const form = e.target;
+      const data = {
+        title: form.title.value,
+        city: form.city.value,
+        price: Number(form.price.value||0),
+        description: form.description.value
+      };
+      if(editing){
+        listings = listings.map(l=> l.id===editing.id ? {...l,...data} : l);
+        editing=null;
+      } else {
+        listings.unshift({id: genId(), ...data});
+      }
+      saveListings(listings);
+      fillForm({});
+      showTab('listings');
+      renderListings();
+    }
+
+    function removeListing(id){
+      if(!confirm("Remover este imóvel?")) return;
+      listings = listings.filter(l=>l.id!==id);
+      saveListings(listings);
+      renderListings();
+    }
+
+    function startEdit(id){
+      editing = listings.find(l=>l.id===id);
+      showTab('add');
+    }
+
+    renderListings();
+  </script>
+</body>
+</html>
