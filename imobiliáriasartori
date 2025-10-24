@@ -6,42 +6,75 @@
   <title>Imobiliária</title>
   <style>
     body { font-family: sans-serif; margin:0; background:#dbe9df; color:#0f1a14; }
-    header { background:#3b6b4a; color:white; padding:1rem; display:flex; align-items:center; }
+    header { background:#3b6b4a; color:white; padding:1rem; display:flex; justify-content:space-between; align-items:center; }
+    header .brand { display:flex; align-items:center; gap:0.5rem; }
     main { padding:1rem; max-width:1200px; margin:auto; }
-    .listing-card { border:1px solid #ccc; background:white; padding:1rem; border-radius:0.5rem; margin-bottom:1rem; }
+    .listing-card { border:1px solid #ccc; background:white; padding:1rem; border-radius:0.5rem; margin-bottom:1rem; display:flex; flex-direction:column; }
     .listing-card h3 { margin:0; font-weight:bold; }
     .listing-card .price { color:gray; font-size:0.9rem; }
     .listing-card .city { font-size:0.85rem; margin-top:0.3rem; }
     .listing-card p { font-size:0.85rem; margin-top:0.5rem; }
     footer { text-align:center; padding:1rem; color:#555; }
+
+    nav { display:flex; gap:0.5rem; }
+    nav a { color:white; text-decoration:none; background:rgba(255,255,255,0.1); padding:0.3rem 0.7rem; border-radius:0.3rem; }
+    nav a:hover { background:rgba(255,255,255,0.2); }
   </style>
 </head>
 <body>
   <header>
-    <div>Imobiliária - Catálogo simples</div>
+    <div class="brand">
+      <div style="width:48px;height:48px;background:#29482f;display:flex;align-items:center;justify-content:center;font-weight:bold;">IM</div>
+      <div>
+        <div>Imobiliária</div>
+        <div style="font-size:0.8rem;">Catálogo simples</div>
+      </div>
+    </div>
+    <nav>
+      <a href="#imoveis">Imóveis</a>
+      <a href="#sobre">Sobre</a>
+    </nav>
   </header>
 
   <main>
-    <div class="listing-card">
-      <h3>Apartamento ensolarado perto do parque</h3>
-      <div class="price">R$ 420.000</div>
-      <div class="city">São Paulo</div>
-      <p>2 quartos, 1 banheiro, cozinha americana. Boa ventilação.</p>
-    </div>
+    <section id="imoveis">
+      <h2>Imóveis Disponíveis</h2>
 
-    <div class="listing-card">
-      <h3>Casa de esquina com quintal</h3>
-      <div class="price">R$ 650.000</div>
-      <div class="city">Campinas</div>
-      <p>3 quartos, amplo quintal e garagem para 2 carros.</p>
-    </div>
+      <div class="listing-card">
+        <div style="display:flex; justify-content:space-between; align-items:start;">
+          <h3>Apartamento ensolarado perto do parque</h3>
+          <div class="price">R$ 420.000</div>
+        </div>
+        <div class="city">São Paulo</div>
+        <p>2 quartos, 1 banheiro, cozinha americana. Boa ventilação.</p>
+      </div>
 
-    <div class="listing-card">
-      <h3>Studio moderno no centro</h3>
-      <div class="price">R$ 280.000</div>
-      <div class="city">São Paulo</div>
-      <p>Pronto para morar, perto de transporte e comércio.</p>
-    </div>
+      <div class="listing-card">
+        <div style="display:flex; justify-content:space-between; align-items:start;">
+          <h3>Casa de esquina com quintal</h3>
+          <div class="price">R$ 650.000</div>
+        </div>
+        <div class="city">Campinas</div>
+        <p>3 quartos, amplo quintal e garagem para 2 carros.</p>
+      </div>
+
+      <div class="listing-card">
+        <div style="display:flex; justify-content:space-between; align-items:start;">
+          <h3>Studio moderno no centro</h3>
+          <div class="price">R$ 280.000</div>
+        </div>
+        <div class="city">São Paulo</div>
+        <p>Pronto para morar, perto de transporte e comércio.</p>
+      </div>
+
+    </section>
+
+    <section id="sobre">
+      <h2>Sobre</h2>
+      <div style="background:white; padding:1rem; border-radius:0.5rem; margin-top:0.5rem;">
+        <p>Demo simples de catálogo de imóveis. Todos os imóveis estão fixos no HTML.</p>
+      </div>
+    </section>
   </main>
 
   <footer>© Imobiliária - Exemplo</footer>
