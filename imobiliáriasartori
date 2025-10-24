@@ -1,0 +1,90 @@
+import React, { useState, useEffect } from "react";
+
+
+// Imobiliária (single-file React component)
+// Uso: cole este arquivo em um projeto React (Vite ou CRA). Requer Tailwind CSS.
+// Arquivo sugerido: src/App.jsx
+
+
+export default function ImobiliariaApp() {
+// esquema de cores: verde militar + neutros
+const brand = {
+dark: "bg-[#29482f]",
+mid: "bg-[#3b6b4a]",
+light: "bg-[#dbe9df]",
+accent: "#556b4f",
+text: "text-[#0f1a14]",
+};
+
+
+// Listings stored in localStorage para facilitar edição sem backend
+const [listings, setListings] = useState(() => {
+try {
+const raw = localStorage.getItem("imobiliaria_listings_v1");
+return raw ? JSON.parse(raw) : sampleListings();
+} catch (e) {
+return sampleListings();
+}
+});
+
+
+const [activeTab, setActiveTab] = useState("listings"); // listings | add | about
+const [cityFilter, setCityFilter] = useState("Todas");
+const [search, setSearch] = useState("");
+const [editing, setEditing] = useState(null);
+
+
+useEffect(() => {
+localStorage.setItem("imobiliaria_listings_v1", JSON.stringify(listings));
+}, [listings]);
+
+
+// Cidades disponíveis (dinâmico)
+const cities = ["Todas", ...Array.from(new Set(listings.map((l) => l.city)))];
+
+
+// Filtragem
+const visible = listings.filter((l) => {
+if (cityFilter !== "Todas" && l.city !== cityFilter) return false;
+if (search && !(`${l.title} ${l.description} ${l.city}`.toLowerCase().includes(search.toLowerCase()))) return false;
+return true;
+});
+
+
+// CRUD local
+function addOrUpdateListing(data) {
+if (editing) {
+setListings((cur) => cur.map((l) => (l.id === editing.id ? { ...editing, ...data } : l)));
+setEditing(null);
+setActiveTab("listings");
+return;
+}
+const newItem = { id: Date.now().toString(), ...data };
+setListings((cur) => [newItem, ...cur]);
+setActiveTab("listings");
+}
+
+
+function removeListing(id) {
+if (!confirm("Remover este imóvel?")) return;
+setListings((cur) => cur.filter((l) => l.id !== id));
+}
+
+
+function startEdit(id) {
+const item = listings.find((l) => l.id === id);
+if (item) {
+setEditing(item);
+setActiveTab("add");
+}
+}
+
+
+// UI
+return (
+<div className={`min-h-screen ${brand.light} ${brand.text} flex flex-col`}>
+<header className={`${brand.mid} text-white p-4 shadow-md`}>
+<div className="container mx-auto flex items-center justify-between">
+<div className="flex items-center gap-3">
+<div className={`w-12 h-12 rounded-md ${brand.dark} flex items-center justify-center font-bold`}>IM</div>
+<div>
