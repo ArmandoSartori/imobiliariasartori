@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Imobiliária Sartori - Encontre seu imóvel dos sonhos</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <h1>Imobiliária Sartori</h1>
+                    <p class="tagline">Realizando sonhos desde 1985</p>
+                </div>
+                <nav class="nav">
+                    <a href="#home">Início</a>
+                    <a href="#properties">Imóveis</a>
+                    <a href="#about">Sobre</a>
+                    <a href="#contact">Contato</a>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <section class="hero">
+        <div class="hero-overlay"></div>
+        <div class="container">
+            <div class="hero-content">
+                <h2 class="hero-title">Encontre o Imóvel Perfeito</h2>
+                <p class="hero-subtitle">Casas, apartamentos e terrenos nas melhores localizações</p>
+            </div>
+        </div>
+    </section>
+
+    <section class="filters-section" id="properties">
+        <div class="container">
+            <div class="filters-card">
+                <h3 class="filters-title">Buscar Imóveis</h3>
+                <div class="filters-grid">
+                    <div class="filter-group">
+                        <label for="city-filter">Cidade</label>
+                        <select id="city-filter" class="filter-select">
+                            <option value="all">Todas as cidades</option>
+                            <option value="sao-paulo">São Paulo</option>
+                            <option value="campinas">Campinas</option>
+                            <option value="santos">Santos</option>
+                            <option value="ribeirao-preto">Ribeirão Preto</option>
+                            <option value="sorocaba">Sorocaba</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label for="type-filter">Tipo</label>
+                        <select id="type-filter" class="filter-select">
+                            <option value="all">Todos os tipos</option>
+                            <option value="casa">Casa</option>
+                            <option value="apartamento">Apartamento</option>
+                            <option value="terreno">Terreno</option>
+                            <option value="comercial">Comercial</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label for="price-filter">Preço máximo</label>
+                        <select id="price-filter" class="filter-select">
+                            <option value="all">Qualquer valor</option>
+                            <option value="300000">Até R$ 300.000</option>
+                            <option value="500000">Até R$ 500.000</option>
+                            <option value="800000">Até R$ 800.000</option>
+                            <option value="1000000">Até R$ 1.000.000</option>
+                            <option value="999999999">Acima de R$ 1.000.000</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <button id="search-btn" class="btn-primary">Buscar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="properties-section">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">Imóveis Disponíveis</h2>
+                <p class="section-subtitle">Explore nossa seleção exclusiva de propriedades</p>
+            </div>
+            <div id="properties-count" class="properties-count"></div>
+            <div class="properties-grid" id="properties-grid">
+            </div>
+            <div id="no-results" class="no-results" style="display: none;">
+                <p>Nenhum imóvel encontrado com os filtros selecionados.</p>
+                <button class="btn-secondary" onclick="resetFilters()">Limpar Filtros</button>
+            </div>
+        </div>
+    </section>
+
+    <section class="about-section" id="about">
+        <div class="container">
+            <div class="about-grid">
+                <div class="about-content">
+                    <h2 class="section-title">Sobre a Imobiliária Sartori</h2>
+                    <p class="about-text">Com mais de 35 anos de experiência no mercado imobiliário, a Imobiliária Sartori se destaca pela excelência no atendimento e pela confiança conquistada junto aos nossos clientes.</p>
+                    <p class="about-text">Nossa equipe altamente qualificada está pronta para auxiliá-lo em todas as etapas da compra, venda ou locação do seu imóvel.</p>
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-number">2.500+</div>
+                            <div class="stat-label">Imóveis Vendidos</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number">98%</div>
+                            <div class="stat-label">Clientes Satisfeitos</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number">35+</div>
+                            <div class="stat-label">Anos de Experiência</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="about-image">
+                    <div class="about-image-placeholder"></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="contact-section" id="contact">
+        <div class="container">
+            <div class="contact-grid">
+                <div class="contact-info">
+                    <h2 class="section-title">Entre em Contato</h2>
+                    <p class="contact-text">Estamos prontos para atendê-lo e ajudá-lo a encontrar o imóvel ideal.</p>
+                    <div class="contact-items">
+                        <div class="contact-item">
+                            <div class="contact-icon">📞</div>
+                            <div>
+                                <div class="contact-label">Telefone</div>
+                                <div class="contact-value">(11) 3456-7890</div>
+                            </div>
+                        </div>
+                        <div class="contact-item">
+                            <div class="contact-icon">📧</div>
+                            <div>
+                                <div class="contact-label">Email</div>
+                                <div class="contact-value">contato@sartori.com.br</div>
+                            </div>
+                        </div>
+                        <div class="contact-item">
+                            <div class="contact-icon">📍</div>
+                            <div>
+                                <div class="contact-label">Endereço</div>
+                                <div class="contact-value">Av. Paulista, 1000 - São Paulo, SP</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="contact-form-container">
+                    <form class="contact-form">
+                        <input type="text" placeholder="Seu nome" class="form-input" required>
+                        <input type="email" placeholder="Seu email" class="form-input" required>
+                        <input type="tel" placeholder="Seu telefone" class="form-input" required>
+                        <textarea placeholder="Sua mensagem" class="form-textarea" rows="4" required></textarea>
+                        <button type="submit" class="btn-primary">Enviar Mensagem</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>Imobiliária Sartori</h3>
+                    <p>Seu parceiro de confiança no mercado imobiliário.</p>
+                </div>
+                <div class="footer-section">
+                    <h4>Links Rápidos</h4>
+                    <a href="#home">Início</a>
+                    <a href="#properties">Imóveis</a>
+                    <a href="#about">Sobre</a>
+                    <a href="#contact">Contato</a>
+                </div>
+                <div class="footer-section">
+                    <h4>Horário de Atendimento</h4>
+                    <p>Segunda a Sexta: 9h - 18h</p>
+                    <p>Sábado: 9h - 13h</p>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2024 Imobiliária Sartori. Todos os direitos reservados.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>
